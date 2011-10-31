@@ -130,7 +130,7 @@ message (STATUS "Headers: ${log4cplus_headers}")
 message (STATUS "Sources: ${log4cplus_sources}")
 
 include_directories ("include")
-include_directories(${CMAKE_BINARY_DIR})
+include_directories(${CMAKE_BINARY_DIR}/include)
 set (log4cplus_all_sources ${log4cplus_sources} ${log4cplus_headers})
 
 #add_library (log4cplus STATIC ${log4cplus_all_sources})
