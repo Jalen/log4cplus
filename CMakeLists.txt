@@ -152,3 +152,62 @@ endif ()
 
 add_subdirectory (loggingserver)
 add_subdirectory (tests)
+
+install(FILES 
+  include/log4cplus/appender.h
+  include/log4cplus/config.hxx
+  include/log4cplus/configurator.h
+  include/log4cplus/consoleappender.h
+  include/log4cplus/fileappender.h
+  include/log4cplus/fstreams.h
+  include/log4cplus/hierarchy.h
+  include/log4cplus/hierarchylocker.h
+  include/log4cplus/layout.h
+  include/log4cplus/logger.h
+  include/log4cplus/loggingmacros.h
+  include/log4cplus/loglevel.h
+  include/log4cplus/ndc.h
+  include/log4cplus/nullappender.h
+  include/log4cplus/socketappender.h
+  include/log4cplus/streams.h
+  include/log4cplus/syslogappender.h
+  include/log4cplus/tstring.h
+  include/log4cplus/version.h
+  DESTINATION include/log4cplus
+)
+install(FILES ${CMAKE_BINARY_DIR}/include/log4cplus/config/defines.hxx include/log4cplus/config/win32.h include/log4cplus/config/macosx.h DESTINATION include/log4cplus/config)
+install(FILES 
+  include/log4cplus/helpers/appenderattachableimpl.h
+  include/log4cplus/helpers/loglog.h
+  include/log4cplus/helpers/logloguser.h
+  include/log4cplus/helpers/pointer.h
+  include/log4cplus/helpers/property.h
+  include/log4cplus/helpers/sleep.h
+  include/log4cplus/helpers/socket.h
+  include/log4cplus/helpers/socketbuffer.h
+  include/log4cplus/helpers/stringhelper.h
+  include/log4cplus/helpers/syncprims.h
+  include/log4cplus/helpers/thread-config.h
+  include/log4cplus/helpers/threads.h
+  include/log4cplus/helpers/timehelper.h
+
+ DESTINATION include/log4cplus/helpers)
+
+install(FILES 
+  include/log4cplus/spi/appenderattachable.h
+  include/log4cplus/spi/factory.h
+  include/log4cplus/spi/filter.h
+  include/log4cplus/spi/loggerfactory.h
+  include/log4cplus/spi/loggerimpl.h
+  include/log4cplus/spi/loggingevent.h
+  include/log4cplus/spi/objectregistry.h
+  include/log4cplus/spi/rootlogger.h
+
+ DESTINATION include/log4cplus/spi)
+
+
+install(TARGETS log4cplus
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+)
