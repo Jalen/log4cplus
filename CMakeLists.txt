@@ -211,3 +211,5 @@ install(TARGETS log4cplus
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
 )
+
+install( FILES cmake/FindLog4cplus.cmake DESTINATION share/cmake/Modules/ )
