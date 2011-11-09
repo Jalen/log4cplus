@@ -10,7 +10,7 @@ endfunction()
 
 
 add_subdirectory (appender_test)
-add_subdirectory (configandwatch_test)
+# add_subdirectory (configandwatch_test)
 add_subdirectory (customloglevel_test)
 add_subdirectory (fileappender_test)
 add_subdirectory (filter_test)
