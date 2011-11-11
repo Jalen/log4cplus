@@ -167,6 +167,9 @@ namespace log4cplus
       // Dtor
         virtual ~RollingFileAppender();
 
+        void setPackAfterRoll(bool bPack) ;
+        bool packAfterRoll() const ;
+
     protected:
         virtual void append(const spi::InternalLoggingEvent& event);
         void rollover();
@@ -174,6 +177,7 @@ namespace log4cplus
       // Data
         long maxFileSize;
         int maxBackupIndex;
+        bool m_bPackedBackup ;
 
     private:
         void init(long maxFileSize, int maxBackupIndex);

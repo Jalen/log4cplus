@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <sstream>
 #include <cstdio>
+#include <stdexcept>
 #if defined (__BORLANDC__)
 // For _wrename() and _wremove() on Windows.
 #  include <stdio.h>
@@ -45,6 +46,12 @@
 #  include <log4cplus/config/windowsh-inc.h>
 #endif
 
+#if defined(PACK_ROLLED_FILES)
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/copy.hpp>
+#endif
+
 
 namespace log4cplus
 {
@@ -55,6 +62,8 @@ using helpers::Time;
 
 const long DEFAULT_ROLLING_LOG_SIZE = 10 * 1024 * 1024L;
 const long MINIMUM_ROLLING_LOG_SIZE = 200*1024L;
+
+static const char* scGzSuffix = "gz";
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -168,7 +177,7 @@ loglog_opening_result (helpers::LogLog & loglog,
 
 static
 void
-rolloverFiles(const tstring& filename, unsigned int maxBackupIndex)
+rolloverFiles(const tstring& filename, unsigned int maxBackupIndex, bool bPacked = false)
 {
     helpers::LogLog * loglog = helpers::LogLog::getLogLog();
 
@@ -188,6 +197,11 @@ rolloverFiles(const tstring& filename, unsigned int maxBackupIndex)
 
         source_oss << filename << LOG4CPLUS_TEXT(".") << i;
         target_oss << filename << LOG4CPLUS_TEXT(".") << (i+1);
+        if ( bPacked )
+        {
+            source_oss << LOG4CPLUS_TEXT(".") << LOG4CPLUS_TEXT(scGzSuffix) ;
+            target_oss << LOG4CPLUS_TEXT(".") << LOG4CPLUS_TEXT(scGzSuffix) ;
+        }
 
         tstring const source (source_oss.str ());
         tstring const target (target_oss.str ());
@@ -203,7 +217,44 @@ rolloverFiles(const tstring& filename, unsigned int maxBackupIndex)
     }
 } // end rolloverFiles()
 
+static
+long
+file_compress(const tstring& filename, const tstring& target)
+{
+    long ret=0;
+#ifndef PACK_ROLLED_FILES
+    tostringstream oss;
+    oss << LOG4CPLUS_TEXT("Not able to compress, because compression wasn't turned on during compilation phase");
+    helpers::getLogLog ().error(oss.str ());
+    ret = -1;
+#else
+    try{
+        std::ifstream input(filename.c_str(), std::ios_base::in | std::ios_base::binary);
+        std::ofstream output(target.c_str(), std::ios_base::out | std::ios_base::binary);
+        boost::iostreams::filtering_stream<boost::iostreams::output> out ;
+
+        out.push(boost::iostreams::gzip_compressor());
+        out.push(output);
+
+        boost::iostreams::copy(input, out);
+    }
+    catch ( std::exception& e)
+    {
+        tostringstream oss;
+        oss << LOG4CPLUS_TEXT("Exception during compression. what()=")
+            << LOG4CPLUS_TEXT(e.what());
+        helpers::getLogLog ().error(oss.str ());
+        ret = -1;
+    }
+
+#endif
+
+
+    return ret;
 }
+
+
+} // end file_compress()
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -394,6 +445,9 @@ RollingFileAppender::RollingFileAppender(const Properties& properties)
     tstring tmp (
         helpers::toUpper (
             properties.getProperty (LOG4CPLUS_TEXT ("MaxFileSize"))));
+    bool b ;
+    properties.getBool(b,LOG4CPLUS_TEXT("CompressBackupFiles"));
+    m_bPackedBackup = b ;
     if (! tmp.empty ())
     {
         tmpMaxFileSize = std::atoi(LOG4CPLUS_TSTRING_TO_STRING(tmp).c_str());
@@ -470,10 +524,15 @@ RollingFileAppender::rollover()
     // If maxBackups <= 0, then there is no file renaming to be done.
     if (maxBackupIndex > 0)
     {
-        rolloverFiles(filename, maxBackupIndex);
+        rolloverFiles(filename, maxBackupIndex, m_bPackedBackup);
 
         // Rename fileName to fileName.1
         tstring target = filename + LOG4CPLUS_TEXT(".1");
+        if ( m_bPackedBackup ){
+            target.append(".");
+            target.append(scGzSuffix);
+        }
+
 
         long ret;
 
@@ -488,7 +547,13 @@ RollingFileAppender::rollover()
             + filename 
             + LOG4CPLUS_TEXT(" to ")
             + target);
-        ret = file_rename (filename, target);
+        if ( !m_bPackedBackup )
+            ret = file_rename (filename, target);
+        else
+        {
+            ret = file_compress(filename, target);
+        }
+
         loglog_renaming_result (loglog, filename, target, ret);
     }
     else
@@ -499,6 +564,18 @@ RollingFileAppender::rollover()
     // Open it up again in truncation mode
     open(std::ios::out | std::ios::trunc);
     loglog_opening_result (loglog, out, filename);
+}
+
+void
+RollingFileAppender::setPackAfterRoll(bool bPack)
+{
+    m_bPackedBackup = bPack ;
+}
+
+bool
+RollingFileAppender::packAfterRoll() const
+{
+    return m_bPackedBackup ;
 }
 
 

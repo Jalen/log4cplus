@@ -14,6 +14,7 @@ set(BUILD_SHARED_LIBS TRUE CACHE BOOL "If TRUE, log4cplus is built as a shared l
 
 option(LOG4CPLUS_WORKING_LOCALE "Define for compilers/standard libraries that support more than just the C locale." OFF)
 option(BUILD_WITH_COVERAGE "Build with coverage analysis support" OFF)
+option(PACK_ROLLED_FILES "Rolling file appender will pack old logs instead removing them" OFF)
 
 include(ConfigureChecks.cmake)
 
