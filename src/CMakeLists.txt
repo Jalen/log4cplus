@@ -112,15 +112,24 @@ set ( log4cplus_headers
 
 )
 
+set ( log4cplus_libraries
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+
 #message (STATUS "Type: ${UNIX}|${CYGWIN}|${WIN32}")
 
 # Uncomment the following line to get locale aware string conversions.
 #add_definitions (-DLOG4CPLUS_WORKING_LOCALE)
 
 if( PACK_ROLLED_FILES )
-    find_package(Boost REQUIRED COMPONENTS iostreams)
-    add_definitions(-DPACK_ROLLED_FILES)
+    find_package(Boost COMPONENTS iostreams)
+    if ( Boost_FOUND )
+        add_definitions(-DPACK_ROLLED_FILES)
+        include_directories(${Boost_INCLUDE_DIRS})
+        set ( log4cplus_libraries ${log4cplus_libraries} ${Boost_LIBRARIES} )
+    endif()
 endif()
+
 
 if ("${UNIX}" OR "${CYGWIN}")
   set (log4cplus_sources ${log4cplus_sources}
@@ -142,12 +151,7 @@ endif ()
 
 
 add_library (log4cplus ${log4cplus_sources} ${log4cplus_headers})
-if( PACK_ROLLED_FILES )
-    target_link_libraries (log4cplus ${CMAKE_THREAD_LIBS_INIT} ${Boost_LIBRARIES})
-else()
-    target_link_libraries (log4cplus ${CMAKE_THREAD_LIBS_INIT})
-endif()
-target_link_libraries (log4cplus ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (log4cplus ${log4cplus_libraries})
 
 set_target_properties (log4cplus PROPERTIES
   VERSION "${log4cplus_version_major}.${log4cplus_version_minor}.${log4cplus_version_patch}"
